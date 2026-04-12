@@ -147,12 +147,13 @@ src/
   A11y / Best Practices, responsive at 375/768/1440, error boundaries verified by killing
   `NOTION_TOKEN` locally).
 - **Subagents** — `deploy-gate-runner` runs the full `quality.md` checklist and returns
-  pass/fail; invoke it before `vercel deploy --prod`. `notion-schema-verifier` diffs live Notion
-  schemas against `src/lib/types.ts` + the `THESIS_*_ALIASES` maps; invoke when property names
-  are suspected to have drifted.
-- **`.claude/` visibility** — `.gitignore` whitelists `rules/`, `settings.json`, and `agents/`
-  as team-shared; `settings.local.json` and `skills/` stay local. New files under `.claude/`
-  need a conscious pick between the two (update `.gitignore` if adding a new shared surface).
+  pass/fail; invoke via `/deploy-gate` (or natural language) before `vercel deploy --prod`.
+  `notion-schema-verifier` diffs live Notion schemas against `src/lib/types.ts` + the
+  `THESIS_*_ALIASES` maps; invoke when property names are suspected to have drifted.
+- **`.claude/` visibility** — `.gitignore` whitelists `rules/`, `settings.json`, `agents/`, and
+  `commands/` as team-shared; `settings.local.json` and `skills/` stay local. New files under
+  `.claude/` need a conscious pick between the two (update `.gitignore` if adding a new shared
+  surface).
 - **Adding a new Notion DB** — (1) retrieve it via MCP / API, (2) store the data-source UUID (not
   the DB ID) in `.env.local` + `.env.example`, (3) add the key to `required` in `src/env.ts`, (4)
   write the fetcher in `src/lib/notion.ts` with a typed empty-state fallback.
