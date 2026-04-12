@@ -1,0 +1,23 @@
+node_modules
+.next
+out
+build
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+coverage
+
+# Playwright MCP snapshot/screenshot artifacts
+.playwright-mcp/
+
+# Local debug screenshots (generated during Playwright verification)
+/*.png
+
+# Claude Code runtime state + locally-installed skills; keep project rules only
+.claude/*
+!.claude/rules/
+!.claude/rules/**

@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography — editorial-brutalist hybrid */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-instrument-sans), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", monospace;
+
+  /* Color — light editorial, ink + signal-red, oklch for perceptual accuracy */
+  --color-paper: oklch(0.96 0.012 85);
+  --color-paper-deep: oklch(0.93 0.014 85);
+  --color-ink: oklch(0.19 0.02 60);
+  --color-ink-soft: oklch(0.19 0.02 60 / 0.72);
+  --color-ink-mute: oklch(0.19 0.02 60 / 0.45);
+  --color-ink-faint: oklch(0.19 0.02 60 / 0.2);
+  --color-rule: oklch(0.19 0.02 60 / 0.12);
+  --color-signal: oklch(0.60 0.22 27);
+  --color-signal-soft: oklch(0.60 0.22 27 / 0.12);
+  --color-clay: oklch(0.58 0.12 38);
+  --color-live: oklch(0.72 0.18 142);
+
+  --color-hot: oklch(0.60 0.22 27);
+  --color-warm: oklch(0.58 0.12 38);
+  --color-watch: oklch(0.19 0.02 60 / 0.6);
+  --color-early: oklch(0.19 0.02 60 / 0.35);
+
+  /* Easing + motion tokens */
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-precise: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Structural rhythm */
+  --breakpoint-3xl: 1760px;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01" 1, "cv11" 1;
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100dvh;
+    background:
+      radial-gradient(
+        ellipse 90% 60% at 50% -10%,
+        oklch(0.93 0.02 65) 0%,
+        transparent 55%
+      ),
+      var(--color-paper);
+  }
+
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  /* Subtle grain for paper texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.04;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0.9 0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+  }
+}
+
+@layer utilities {
+  .text-display {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+    letter-spacing: -0.035em;
+    line-height: 0.9;
+  }
+
+  .text-display-italic {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-variation-settings: "opsz" 144, "SOFT" 80, "WONK" 1;
+    letter-spacing: -0.025em;
+  }
+
+  .text-mono-tight {
+    font-family: var(--font-mono);
+    letter-spacing: -0.02em;
+    font-feature-settings: "zero" 1, "ss02" 1;
+  }
+
+  .rule {
+    border-color: var(--color-rule);
+  }
+
+  .grid-deck {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(1rem, 2.5vw, 2rem);
+    row-gap: clamp(2rem, 6vw, 5rem);
+  }
+
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  .live-dot {
+    animation: live-pulse 1.6s ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .marquee {
+    animation: marquee 40s linear infinite;
+    will-change: transform;
+  }
+
+  /* Editorial drop cap — Fraunces, hangs left, two-line height */
+  .drop-cap::first-letter {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 1;
+    font-weight: 500;
+    font-style: normal;
+    float: left;
+    font-size: 4.6em;
+    line-height: 0.82;
+    padding: 0.08em 0.1em 0 0;
+    margin: 0.04em -0.04em 0 0;
+    color: var(--color-signal);
+    letter-spacing: -0.04em;
+  }
+
+  /* Vertical spine label — rotated mono caption */
+  .spine-label {
+    font-family: var(--font-mono);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    font-size: 10px;
+    color: var(--color-ink-mute);
+  }
+
+  /* Magazine-style folio (running page number) */
+  .folio {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+  }
+  .folio-large {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--color-ink-soft);
+  }
+
+  /* Hero page-load choreography — CSS-only staggered reveal */
+  @keyframes hero-rise {
+    from { opacity: 0; transform: translate3d(0, 14px, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+  .hero-rise {
+    opacity: 0;
+    animation: hero-rise 900ms var(--ease-editorial) forwards;
+    will-change: opacity, transform;
+  }
+  .hero-rise-1 { animation-delay: 60ms; }
+  .hero-rise-2 { animation-delay: 220ms; }
+  .hero-rise-3 { animation-delay: 420ms; }
+  .hero-rise-4 { animation-delay: 640ms; }
+  .hero-rise-5 { animation-delay: 860ms; }
+
+  /* Scroll hint — tiny bouncing arrow */
+  @keyframes scroll-hint {
+    0%, 100% { transform: translateY(0); opacity: 0.7; }
+    50%      { transform: translateY(6px); opacity: 1; }
+  }
+  .scroll-hint {
+    animation: scroll-hint 2.2s ease-in-out infinite;
+  }
+
+  /* LiveStatusBar countdown sweep */
+  @keyframes live-sweep {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+  .live-sweep {
+    transform-origin: left center;
+    animation: live-sweep 60s linear infinite;
+    will-change: transform;
+  }
+
+  /* Underline reveal for editorial links */
+  .link-editorial {
+    position: relative;
+    background-image: linear-gradient(var(--color-signal), var(--color-signal));
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    transition: background-size 320ms var(--ease-editorial);
+  }
+  .link-editorial:hover,
+  .link-editorial:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot,
+    .marquee,
+    .live-sweep,
+    .scroll-hint,
+    .hero-rise,
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    .hero-rise { opacity: 1; transform: none; }
+    .live-sweep { transform: scaleX(1); }
+  }
+}
