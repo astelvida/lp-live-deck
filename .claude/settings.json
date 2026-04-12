@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); if echo \"$input\" | grep -qE '\\.env\\.local(\"|\\\\)'; then echo 'BLOCKED: .env.local contains live NOTION_TOKEN + data-source UUIDs. Edit .env.example instead, or have the user update .env.local manually.' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); if echo \"$input\" | grep -qE '\\.(ts|tsx)(\"|\\\\)'; then cd \"$CLAUDE_PROJECT_DIR\" && npm run type-check 2>&1 | tail -30; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

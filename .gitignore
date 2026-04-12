@@ -17,7 +17,11 @@ coverage
 # Local debug screenshots (generated during Playwright verification)
 /*.png
 
-# Claude Code runtime state + locally-installed skills; keep project rules only
+# Claude Code runtime state + locally-installed skills.
+# Keep team-shared surfaces: rules, hooks config, subagents. Ignore local state.
 .claude/*
 !.claude/rules/
 !.claude/rules/**
+!.claude/settings.json
+!.claude/agents/
+!.claude/agents/**
