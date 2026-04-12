@@ -14,7 +14,13 @@ npm run type-check   # tsc --noEmit — run before every commit
 npm run lint         # eslint-config-next
 ```
 
-Deploy: `vercel deploy --prod` (requires `vercel link` + `vercel env add` for all 5 vars first).
+Deploy: `git push origin main` auto-deploys to production via the GitHub integration wired
+at `vercel link` time. Manual redeploy: `vercel deploy --prod --yes`. Live URL:
+https://lp-live-deck.vercel.app. Project: `astelvidas-projects/lp-live-deck`. First-time
+setup (already done): `vercel link` + push production env vars for `NOTION_TOKEN`,
+`NOTION_DEALFLOW_DB`, `NOTION_SIGNAL_DB`, `NOTION_THESIS_PACK_PAGE`, `NOTION_BLOG_DB`,
+`NEXT_PUBLIC_SITE_URL`. Preview + development scopes are currently unpopulated — only
+affects branch-preview deploys and `vercel dev` (not `npm run dev`).
 
 ## Architecture
 
@@ -106,6 +112,11 @@ Signal Log `Thesis Relevance` lacks "Both" — never add it to the signal alias 
   edit (PostToolUse) and blocks writes to `.env.local` with exit 2 (PreToolUse). Don't re-run
   type-check manually after edits; edit `.env.example` instead of `.env.local` when changing
   env shape.
+- **Vercel CLI 50.x `env add` quirks.** `vercel env add <name> <env>` takes **one** environment
+  per call (not multi-env). Preview scope needs a git-branch positional — stdin pipe alone
+  triggers an unsatisfiable interactive prompt. `--sensitive` + `development` scope also
+  rejects stdin. For bulk adds, loop per-env and reserve `--sensitive` for production; pipe
+  values with `printf '%s'` (not `echo` — avoids trailing newline in stored tokens).
 
 ## File map
 
