@@ -102,6 +102,10 @@ Signal Log `Thesis Relevance` lacks "Both" — never add it to the signal alias 
   `Kill Criteria`, `Outreach Sent` are all partially filled. UI renders correct empty-states —
   filling these in Notion lights up existing sections with zero code changes (the point of
   "the tool is the pitch").
+- **Hooks auto-run.** `.claude/settings.json` runs `npm run type-check` on every `.ts`/`.tsx`
+  edit (PostToolUse) and blocks writes to `.env.local` with exit 2 (PreToolUse). Don't re-run
+  type-check manually after edits; edit `.env.example` instead of `.env.local` when changing
+  env shape.
 
 ## File map
 
@@ -136,9 +140,19 @@ src/
 
 - **Feature work** — branch `feat/<scope>`, commit `feat(<scope>): ...`. Never commit to `main`.
 - **Before every commit** — `npm run type-check` must be clean.
+- **Before every commit** — update this CLAUDE.md if the session introduced anything future
+  Claude should know (new gotcha, schema, tool, convention). The doc update lands in the same
+  commit as the change it describes.
 - **Before every deploy** — see `.claude/rules/quality.md` checklist (Lighthouse ≥90 across Perf /
   A11y / Best Practices, responsive at 375/768/1440, error boundaries verified by killing
   `NOTION_TOKEN` locally).
+- **Subagents** — `deploy-gate-runner` runs the full `quality.md` checklist and returns
+  pass/fail; invoke it before `vercel deploy --prod`. `notion-schema-verifier` diffs live Notion
+  schemas against `src/lib/types.ts` + the `THESIS_*_ALIASES` maps; invoke when property names
+  are suspected to have drifted.
+- **`.claude/` visibility** — `.gitignore` whitelists `rules/`, `settings.json`, and `agents/`
+  as team-shared; `settings.local.json` and `skills/` stay local. New files under `.claude/`
+  need a conscious pick between the two (update `.gitignore` if adding a new shared surface).
 - **Adding a new Notion DB** — (1) retrieve it via MCP / API, (2) store the data-source UUID (not
   the DB ID) in `.env.local` + `.env.example`, (3) add the key to `required` in `src/env.ts`, (4)
   write the fetcher in `src/lib/notion.ts` with a typed empty-state fallback.
