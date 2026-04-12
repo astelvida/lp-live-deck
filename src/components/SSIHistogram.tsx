@@ -10,17 +10,26 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { getHeatTier } from "@/lib/ssi";
+import type { HeatTier } from "@/lib/types";
 
 const INK = "oklch(0.19 0.02 60)";
 const INK_MUTE = "oklch(0.19 0.02 60 / 0.45)";
 const RULE = "oklch(0.19 0.02 60 / 0.12)";
 
+// Histogram-specific palette — higher saturation than getHeatColor for chart legibility.
+// Tier thresholds are owned by getHeatTier in src/lib/ssi.ts (single source of truth).
+const BAR_FILL: Record<HeatTier, string> = {
+  HOT: "oklch(0.60 0.22 27)",
+  WARM: "oklch(0.58 0.12 38)",
+  WATCH: "oklch(0.19 0.02 60 / 0.6)",
+  EARLY: "oklch(0.19 0.02 60 / 0.35)",
+};
+
 function barFill(bucket: string): string {
   const start = parseInt(bucket.split("-")[0] ?? "0", 10);
-  if (start >= 75) return "oklch(0.60 0.22 27)"; // HOT
-  if (start >= 60) return "oklch(0.58 0.12 38)"; // WARM
-  if (start >= 45) return "oklch(0.19 0.02 60 / 0.6)"; // WATCH
-  return "oklch(0.19 0.02 60 / 0.35)"; // EARLY
+  const tier = getHeatTier(start);
+  return tier ? BAR_FILL[tier] : BAR_FILL.EARLY;
 }
 
 export function SSIHistogram({
