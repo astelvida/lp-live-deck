@@ -3,21 +3,25 @@
 import { animate, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
+// Single counter — count up from 0 to `value` once viewport-visible.
+// Format defaults to integer; pass `decimals={1}` for SSI-style 73.1.
 export function NumberCounter({
   value,
-  duration = 0.9,
-  className,
-  format = (n) => Math.round(n).toLocaleString("en-US"),
+  duration = 1.0,
   delay = 0,
+  decimals = 0,
+  suffix,
+  className,
 }: {
   value: number;
   duration?: number;
-  className?: string;
-  format?: (n: number) => string;
   delay?: number;
+  decimals?: number;
+  suffix?: string;
+  className?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.5 });
+  const inView = useInView(ref, { once: true, amount: 0.6 });
   const reduced = useReducedMotion();
   const [display, setDisplay] = useState(reduced ? value : 0);
 
@@ -36,9 +40,15 @@ export function NumberCounter({
     return () => controls.stop();
   }, [inView, value, duration, delay, reduced]);
 
+  const formatted =
+    decimals > 0
+      ? display.toFixed(decimals)
+      : Math.round(display).toLocaleString("en-US");
+
   return (
     <span ref={ref} className={className}>
-      {format(display)}
+      {formatted}
+      {suffix}
     </span>
   );
 }

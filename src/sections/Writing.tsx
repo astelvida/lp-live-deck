@@ -73,9 +73,9 @@ export function WritingSection({
 }) {
   const hasAny = featured || recent.length > 0;
   return (
-    <section className="mt-32 mb-40 md:mt-48">
+    <section id="writing" className="mt-32 mb-40 scroll-mt-12 md:mt-48">
       <SectionHeader
-        number="08"
+        number="06"
         label="Writing"
         kicker="Signals Over Stories · Substack"
         title={

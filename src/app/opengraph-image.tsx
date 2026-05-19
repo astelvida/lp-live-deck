@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getHeroStats } from "@/lib/notion";
+import { getHeroData } from "@/lib/notion";
 
 export const runtime = "nodejs";
 export const alt = "Signals Over Stories — a fund thesis, rendered in real time";
@@ -7,10 +7,13 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image() {
-  let stats = { pipelineCount: 0, signals7d: 0 };
+  let stats = { pipelineCount: 0, escalatingSignals: 0 };
   try {
-    const h = await getHeroStats();
-    stats = { pipelineCount: h.pipelineCount, signals7d: h.signals7d };
+    const h = await getHeroData();
+    stats = {
+      pipelineCount: h.companiesTracked,
+      escalatingSignals: h.escalatingSignals,
+    };
   } catch {
     // fall through to zero values — OG still renders
   }
@@ -48,8 +51,8 @@ export default async function Image() {
             <span style={{ fontSize: 64, color: "#1a1210", letterSpacing: -2 }}>{stats.pipelineCount}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-            <span style={{ fontSize: 14, letterSpacing: 3, textTransform: "uppercase" }}>Signals · 7d</span>
-            <span style={{ fontSize: 64, color: "#1a1210", letterSpacing: -2 }}>{stats.signals7d}</span>
+            <span style={{ fontSize: 14, letterSpacing: 3, textTransform: "uppercase" }}>Escalating signals</span>
+            <span style={{ fontSize: 64, color: "#1a1210", letterSpacing: -2 }}>{stats.escalatingSignals}</span>
           </div>
         </div>
       </div>

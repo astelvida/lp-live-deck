@@ -1,172 +1,399 @@
+import {
+  GRR_BENCHMARK,
+  REGULATORY_CATALYSTS,
+  type ThesisKey,
+} from "@/lib/thesis-canon";
 import type { Thesis } from "@/lib/types";
-import { formatSSI } from "@/lib/ssi";
-import { ThesisGlyph } from "./ThesisGlyph";
-import { CountdownClock } from "./CountdownClock";
+import { NumberCounter } from "@/components/NumberCounter";
+import { Reveal } from "@/components/Reveal";
 
-export function ThesisCard({ thesis }: { thesis: Thesis }) {
-  const catalystFuture =
-    thesis.regulatoryCatalystDate &&
-    new Date(thesis.regulatoryCatalystDate).getTime() > Date.now();
+const CATALYST_COLOR: Record<"live" | "approaching" | "future", string> = {
+  live: "var(--color-signal)",
+  approaching: "var(--color-amber)",
+  future: "var(--color-ink-mute)",
+};
 
-  const criteria = (thesis.investmentCriteria ?? "")
-    .split(/\n|•|·|,(?=\s)/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .slice(0, 5);
+const CATALYST_LABEL: Record<"live" | "approaching" | "future", string> = {
+  live: "LIVE",
+  approaching: "APPROACHING",
+  future: "BUILDING",
+};
 
+function EvidenceBullet({
+  bullet,
+  index,
+}: {
+  bullet: Thesis["evidence"][number];
+  index: number;
+}) {
   return (
-    <article className="relative border-t border-[var(--color-ink)] pt-10 md:pt-14">
-      <div className="grid-deck">
-        <div className="col-span-12 md:col-span-2">
-          <div className="text-display text-[clamp(3.5rem,7vw,7rem)] text-[var(--color-ink)]">
-            {String(thesis.number).padStart(2, "0")}
-          </div>
-          <div className="mt-4 text-[var(--color-ink-mute)]" aria-hidden="true">
-            <ThesisGlyph style={thesis.visualStyle} className="h-32 w-32" />
-          </div>
+    <Reveal direction="up" delay={index * 0.08}>
+      <li className="group relative grid grid-cols-[80px_1fr] gap-4 border-b border-dashed border-[var(--color-rule)] py-3 transition-colors hover:bg-[oklch(0.97_0.012_85_/_0.55)]">
+        <span
+          className={`pt-0.5 text-[10px] uppercase tracking-[0.12em] tabular-nums ${
+            bullet.isFresh
+              ? "text-[var(--color-signal)]"
+              : "text-[var(--color-ink-mute)]"
+          }`}
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
+          {bullet.week ?? "—"}
+        </span>
+        <div className="min-w-0">
           <p
-            className="mt-4 text-[10px] uppercase tracking-[0.28em] text-[var(--color-ink-soft)]"
+            className={`text-[13px] leading-snug ${
+              bullet.isFresh
+                ? "text-[var(--color-ink)]"
+                : "text-[var(--color-ink-soft)]"
+            }`}
+          >
+            {bullet.title}
+          </p>
+          <div
+            className="mt-1 flex flex-wrap items-center gap-2 text-[9px] uppercase tracking-[0.12em] text-[var(--color-ink-mute)]"
             style={{ fontFamily: "var(--font-mono)" }}
           >
-            Visual Style · {thesis.visualStyle ?? "—"}
-          </p>
+            {bullet.sourceChannel ? <span>{bullet.sourceChannel}</span> : null}
+            {bullet.signalType ? <span>· {bullet.signalType}</span> : null}
+            {bullet.novelty ? (
+              <span
+                className={
+                  bullet.novelty === "Escalating"
+                    ? "text-[var(--color-signal)]"
+                    : ""
+                }
+              >
+                · {bullet.novelty}
+              </span>
+            ) : null}
+          </div>
         </div>
+      </li>
+    </Reveal>
+  );
+}
 
-        <div className="col-span-12 md:col-span-7">
-          <div className="flex flex-wrap items-center gap-3">
-            {thesis.category && (
-              <span
-                className="border border-[var(--color-ink-faint)] px-2 py-0.5 text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-soft)]"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                {thesis.category}
-              </span>
-            )}
-            {thesis.conviction && (
-              <span
-                className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-signal)]"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                Conviction · {thesis.conviction}
-              </span>
-            )}
-          </div>
-
-          <h3 className="text-display mt-4 text-[clamp(2rem,4.5vw,4rem)] text-[var(--color-ink)]">
-            {thesis.title}
-          </h3>
-
-          {thesis.contrarianHook && (
-            <blockquote className="mt-6 border-l-2 border-[var(--color-signal)] pl-5">
-              <p className="text-display-italic text-[clamp(1.25rem,2.2vw,1.9rem)] text-[var(--color-ink)]">
-                “{thesis.contrarianHook}”
-              </p>
-            </blockquote>
-          )}
-
-          {criteria.length > 0 && (
-            <ul className="mt-8 grid gap-2 border-t border-[var(--color-rule)] pt-6 text-sm text-[var(--color-ink-soft)] md:grid-cols-2">
-              {criteria.map((c, i) => (
-                <li key={i} className="flex items-baseline gap-3">
-                  <span
-                    className="text-[10px] text-[var(--color-ink-mute)]"
-                    style={{ fontFamily: "var(--font-mono)" }}
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span>{c}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {thesis.keyRisks && (
-            <p className="mt-6 max-w-2xl text-sm text-[var(--color-ink-mute)]">
-              <span
-                className="mr-2 text-[10px] uppercase tracking-[0.24em] text-[var(--color-signal)]"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                Bear case ·
-              </span>
-              {thesis.keyRisks}
-            </p>
-          )}
-        </div>
-
-        <aside className="col-span-12 flex flex-col gap-6 border-l-0 md:col-span-3 md:border-l md:border-[var(--color-rule)] md:pl-6">
-          <div>
-            <p
-              className="text-[10px] uppercase tracking-[0.28em] text-[var(--color-ink-mute)]"
-              style={{ fontFamily: "var(--font-mono)" }}
-            >
-              Companies tracked
-            </p>
-            <p
-              className="text-mono-tight text-4xl text-[var(--color-ink)]"
-              style={{ fontFamily: "var(--font-mono)" }}
-            >
-              {thesis.companiesTracked.toString().padStart(2, "0")}
-            </p>
-          </div>
-          <div>
-            <p
-              className="text-[10px] uppercase tracking-[0.28em] text-[var(--color-ink-mute)]"
-              style={{ fontFamily: "var(--font-mono)" }}
-            >
-              Strong signals · 90d
-            </p>
-            <p
-              className="text-mono-tight text-2xl text-[var(--color-signal)] tabular-nums"
-              style={{ fontFamily: "var(--font-mono)" }}
-            >
-              {thesis.strongSignals90d.toString().padStart(2, "0")}
-            </p>
-          </div>
-          {thesis.topCompanies.length > 0 && (
-            <div>
-              <p
-                className="text-[10px] uppercase tracking-[0.28em] text-[var(--color-ink-mute)]"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                Top conviction
-              </p>
-              <ul className="mt-2 space-y-1.5">
-                {thesis.topCompanies.map((c) => (
-                  <li
-                    key={c.id}
-                    className="flex items-baseline justify-between gap-3 border-b border-[var(--color-rule)] pb-1.5 last:border-b-0"
-                  >
-                    <span className="text-sm text-[var(--color-ink)]">{c.name}</span>
-                    <span
-                      className="text-mono-tight text-xs text-[var(--color-ink-soft)] tabular-nums"
-                      style={{ fontFamily: "var(--font-mono)" }}
-                    >
-                      {formatSSI(c.ssiScore)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {thesis.marketSize && (
-            <div>
-              <p
-                className="text-[10px] uppercase tracking-[0.28em] text-[var(--color-ink-mute)]"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                Market size
-              </p>
-              <p className="mt-1 text-sm text-[var(--color-ink-soft)]">{thesis.marketSize}</p>
-            </div>
-          )}
-          {catalystFuture && thesis.regulatoryCatalystDate && (
-            <CountdownClock
-              date={thesis.regulatoryCatalystDate}
-              label="Regulatory catalyst"
-            />
-          )}
-        </aside>
+function CatalystRow({
+  catalyst,
+}: {
+  catalyst: (typeof REGULATORY_CATALYSTS)[number];
+}) {
+  return (
+    <div className="grid grid-cols-[14px_1fr_auto] items-baseline gap-3 border-b border-dashed border-[var(--color-rule)] py-2 last:border-b-0">
+      <span
+        className="block size-[7px] translate-y-1 rounded-full"
+        style={{ background: CATALYST_COLOR[catalyst.status] }}
+        aria-hidden="true"
+      />
+      <span className="text-[12px] text-[var(--color-ink-soft)]">
+        {catalyst.label}
+      </span>
+      <div
+        className="flex items-baseline gap-2 text-[10px] uppercase tracking-[0.14em] tabular-nums"
+        style={{ fontFamily: "var(--font-mono)" }}
+      >
+        <span style={{ color: CATALYST_COLOR[catalyst.status] }}>
+          {catalyst.date}
+        </span>
+        <span
+          className="text-[8px]"
+          style={{ color: CATALYST_COLOR[catalyst.status] }}
+        >
+          · {CATALYST_LABEL[catalyst.status]}
+        </span>
       </div>
+    </div>
+  );
+}
+
+export function ThesisCard({
+  thesis,
+  align,
+}: {
+  thesis: Thesis;
+  align: "left" | "right";
+}) {
+  const isGAO = thesis.key === "Governed Agentic Ops";
+  const isRight = align === "right";
+
+  return (
+    <article
+      className={`relative overflow-hidden border-t border-[var(--color-ink)] bg-[var(--color-paper)] px-6 py-10 sm:px-10 ${
+        isRight ? "md:border-l-0" : ""
+      } md:py-12`}
+    >
+      {/* Backdrop numeral — sits behind the content */}
+      <span
+        aria-hidden="true"
+        className={`backdrop-numeral pointer-events-none absolute -top-12 text-[clamp(14rem,22vw,22rem)] text-[var(--color-ink-faint)] ${
+          isRight ? "right-2" : "right-4"
+        }`}
+      >
+        0{thesis.number}
+      </span>
+
+      {/* Thesis label */}
+      <Reveal direction="up">
+        <div
+          className="relative z-10 flex items-baseline justify-between gap-4"
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
+          <span className="kicker">Thesis 0{thesis.number}</span>
+          <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-mute)]">
+            {thesis.shortTitle}
+          </span>
+        </div>
+      </Reveal>
+
+      {/* Thesis title */}
+      <Reveal direction="up" delay={0.05}>
+        <h3
+          className="relative z-10 mt-4 display-hero text-[clamp(2rem,4vw,3rem)] text-[var(--color-ink)]"
+        >
+          {thesis.title}
+        </h3>
+      </Reveal>
+
+      {/* Core Bet pull-quote */}
+      <Reveal direction="up" delay={0.1}>
+        <blockquote
+          className="pullquote relative z-10 mt-6 max-w-xl text-[clamp(1.05rem,1.5vw,1.3rem)] text-[var(--color-ink-soft)]"
+        >
+          {thesis.coreBet}
+        </blockquote>
+      </Reveal>
+
+      {/* Anti-thesis stamp */}
+      <Reveal direction="up" delay={0.15}>
+        <div className="relative z-10 mt-5 flex items-start gap-3 border-l-2 border-[var(--color-signal)] bg-[var(--color-signal-soft)] py-2 pl-3 pr-4">
+          <span
+            className="shrink-0 text-[9px] font-medium uppercase tracking-[0.22em] text-[var(--color-signal)]"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            We reject ·
+          </span>
+          <span className="text-[11px] leading-snug text-[var(--color-ink-soft)]">
+            {thesis.antiThesis}
+          </span>
+        </div>
+      </Reveal>
+
+      {/* Regulatory pills */}
+      <Reveal direction="up" delay={0.2}>
+        <div className="relative z-10 mt-6 flex flex-wrap gap-1.5">
+          {thesis.regulatoryPills.map((p) => (
+            <span
+              key={p}
+              className="reg-pill border-[0.5px] border-[var(--color-signal)] bg-white text-[var(--color-signal)]"
+              style={{ fontSize: "10px", padding: "3px 8px" }}
+            >
+              {p}
+            </span>
+          ))}
+        </div>
+      </Reveal>
+
+      {/* Stats line */}
+      <Reveal direction="up" delay={0.25}>
+        <div className="relative z-10 mt-8 grid grid-cols-3 gap-6 border-y border-[var(--color-ink)] py-5">
+          <div>
+            <div
+              className="text-[clamp(1.6rem,3vw,2.4rem)] font-medium leading-none text-[var(--color-ink)] tabular-nums"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              <NumberCounter value={thesis.totalCompanies} delay={0.3} />
+            </div>
+            <div
+              className="mt-1.5 text-[9px] uppercase tracking-[0.16em] text-[var(--color-ink-mute)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Companies
+            </div>
+          </div>
+          <div>
+            <div
+              className="text-[clamp(1.6rem,3vw,2.4rem)] font-medium leading-none text-[var(--color-signal)] tabular-nums"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              <NumberCounter value={thesis.thesisFitCount} delay={0.4} />
+            </div>
+            <div
+              className="mt-1.5 text-[9px] uppercase tracking-[0.16em] text-[var(--color-ink-mute)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              P0+P1 fit
+            </div>
+          </div>
+          <div>
+            <div
+              className="text-[clamp(1.6rem,3vw,2.4rem)] font-medium leading-none text-[var(--color-ink)] tabular-nums"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              <NumberCounter value={thesis.strongSignals90d} delay={0.5} />
+            </div>
+            <div
+              className="mt-1.5 text-[9px] uppercase tracking-[0.16em] text-[var(--color-ink-mute)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Strong sigs · 90d
+            </div>
+          </div>
+        </div>
+      </Reveal>
+
+      {/* Live evidence */}
+      <div className="relative z-10 mt-8">
+        <Reveal direction="up">
+          <div className="flex items-baseline justify-between">
+            <h4
+              className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-ink)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Live evidence
+            </h4>
+            <span
+              className="text-[9px] uppercase tracking-[0.18em] text-[var(--color-ink-mute)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Strong + Escalating
+            </span>
+          </div>
+        </Reveal>
+        {thesis.evidence.length === 0 ? (
+          <p className="mt-4 text-[12px] italic text-[var(--color-ink-mute)]">
+            No Strong+Escalating signals tagged to this thesis in the buffer.
+          </p>
+        ) : (
+          <ul className="mt-2">
+            {thesis.evidence.map((b, i) => (
+              <EvidenceBullet key={b.id} bullet={b} index={i} />
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Company chips */}
+      <div className="relative z-10 mt-8">
+        <Reveal direction="up">
+          <div className="flex items-baseline justify-between">
+            <h4
+              className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-ink)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Conviction roster
+            </h4>
+            <span
+              className="text-[9px] uppercase tracking-[0.18em] text-[var(--color-ink-mute)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              {thesis.totalCompanies} total · sorted by Adj. SSI
+            </span>
+          </div>
+        </Reveal>
+        <Reveal direction="up" delay={0.1}>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {thesis.companies.map((c) => {
+              const isP0 = c.priority === "P0";
+              const isP1 = c.priority === "P1";
+              return (
+                <span
+                  key={c.id}
+                  className={`magnetic inline-flex items-center gap-2 px-2.5 py-1.5 text-[11px] tracking-[0.02em] ${
+                    isP0
+                      ? "border-[1.5px] border-[var(--color-signal)] bg-[var(--color-signal-soft)] text-[var(--color-signal)]"
+                      : isP1
+                        ? "border-[0.5px] border-[var(--color-amber)] bg-white text-[var(--color-ink)]"
+                        : "border-[0.5px] border-[var(--color-rule)] bg-white text-[var(--color-ink-soft)]"
+                  }`}
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  {c.name}
+                  {(c.adjustedSsi ?? c.ssiScore) !== null ? (
+                    <span
+                      className="rounded-sm px-1 text-[9px] tabular-nums"
+                      style={{
+                        background: isP0
+                          ? "var(--color-signal-soft)"
+                          : "var(--color-paper-deep)",
+                        color: isP0
+                          ? "var(--color-signal)"
+                          : "var(--color-ink-soft)",
+                      }}
+                    >
+                      {Math.round(c.adjustedSsi ?? c.ssiScore ?? 0)}
+                    </span>
+                  ) : null}
+                </span>
+              );
+            })}
+            {thesis.totalCompanies > thesis.companies.length ? (
+              <span
+                className="inline-flex items-center px-2.5 py-1.5 text-[11px] uppercase tracking-[0.06em] text-[var(--color-ink-mute)]"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                + {thesis.totalCompanies - thesis.companies.length} more
+              </span>
+            ) : null}
+          </div>
+        </Reveal>
+      </div>
+
+      {/* Per-thesis special block */}
+      <Reveal direction="up" delay={0.2}>
+        {isGAO ? (
+          <div className="relative z-10 mt-8 border border-[var(--color-ink)] bg-white px-5 py-5">
+            <div
+              className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-signal)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Regulatory catalyst window
+            </div>
+            <div className="mt-3">
+              {REGULATORY_CATALYSTS.map((c) => (
+                <CatalystRow key={c.label} catalyst={c} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="relative z-10 mt-8 border border-[var(--color-ink)] bg-white px-5 py-5">
+            <div
+              className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-signal)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              GRR benchmark · the moat test
+            </div>
+            <div className="mt-3">
+              <div className="flex items-baseline justify-between border-b border-dashed border-[var(--color-rule)] py-2">
+                <span className="text-[12px] text-[var(--color-ink-soft)]">
+                  {GRR_BENCHMARK.embedded.label}
+                </span>
+                <span
+                  className="text-[14px] font-medium tabular-nums text-[var(--color-live)]"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  {GRR_BENCHMARK.embedded.value}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between py-2">
+                <span className="text-[12px] text-[var(--color-ink-soft)]">
+                  {GRR_BENCHMARK.overlay.label}
+                </span>
+                <span
+                  className="text-[14px] font-medium tabular-nums text-[var(--color-signal)]"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  {GRR_BENCHMARK.overlay.value}
+                </span>
+              </div>
+              <p className="mt-2 border-t border-dashed border-[var(--color-rule)] pt-2 text-[10px] italic leading-relaxed text-[var(--color-ink-mute)]">
+                {GRR_BENCHMARK.test}
+              </p>
+            </div>
+          </div>
+        )}
+      </Reveal>
     </article>
   );
 }
+
+export type { ThesisKey };

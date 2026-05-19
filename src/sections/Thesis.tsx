@@ -1,40 +1,69 @@
-import { SectionHeader } from "@/components/SectionHeader";
 import { ThesisCard } from "@/components/ThesisCard";
+import { Reveal } from "@/components/Reveal";
 import type { Thesis } from "@/lib/types";
 
 export function ThesisSection({ theses }: { theses: Thesis[] }) {
   return (
-    <section className="mt-24 md:mt-40">
-      <SectionHeader
-        number="02"
-        label="Thesis"
-        kicker="Three bets · one operating system"
-        title={
-          <>
-            What we believe,{" "}
-            <span className="text-display-italic text-[var(--color-signal)]">
-              and what kills it.
-            </span>
-          </>
-        }
-      >
-        Each thesis ships with a contrarian hook, an explicit investment criteria checklist, and a
-        regulatory catalyst date. If the catalyst moves, the page moves.
-      </SectionHeader>
-
-      {theses.length === 0 ? (
-        <div className="grid-deck mt-12">
-          <p className="col-span-12 text-[var(--color-ink-mute)] md:col-start-3 md:col-span-10">
-            No published theses available. Check back after the next Notion sync.
+    <section
+      id="thesis"
+      aria-labelledby="thesis-title"
+      className="relative mb-28 scroll-mt-12"
+    >
+      {/* Section heading row */}
+      <div className="grid grid-cols-12 gap-x-6 gap-y-6">
+        <div className="col-span-12 md:col-span-2">
+          <span
+            className="text-[10px] uppercase tracking-[0.32em] text-[var(--color-signal)]"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            03 / 06
+          </span>
+          <p
+            className="mt-1 text-[10px] uppercase tracking-[0.28em] text-[var(--color-ink-mute)]"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            The Two Bets
           </p>
         </div>
-      ) : (
-        <div className="mt-12 space-y-20 md:space-y-28">
-          {theses.map((t) => (
-            <ThesisCard key={t.id} thesis={t} />
-          ))}
+        <div className="col-span-12 md:col-span-10">
+          <Reveal direction="up" duration={0.8}>
+            <h2
+              id="thesis-title"
+              className="display-hero text-[clamp(2.5rem,5.5vw,4.5rem)] text-[var(--color-ink)]"
+            >
+              Two theses,{" "}
+              <span className="display-wonk text-[var(--color-signal)]">
+                one moat each.
+              </span>
+            </h2>
+          </Reveal>
+          <Reveal direction="up" delay={0.15}>
+            <p
+              className="pullquote mt-6 max-w-2xl text-[clamp(1.05rem,1.6vw,1.4rem)] text-[var(--color-ink-soft)]"
+            >
+              Horizontal AI is commoditising. We underwrite two structural moats
+              in regulated Europe: the deployment gateway, and the system of
+              record.
+            </p>
+          </Reveal>
         </div>
-      )}
+      </div>
+
+      {/* Two-thesis spread — full-bleed feel */}
+      <div className="mt-14 grid grid-cols-1 md:grid-cols-2">
+        {theses.map((t, i) => (
+          <div
+            key={t.key}
+            className={
+              i === 0
+                ? "md:[border-right:0.5px_solid_var(--color-ink)]"
+                : ""
+            }
+          >
+            <ThesisCard thesis={t} align={i === 0 ? "left" : "right"} />
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

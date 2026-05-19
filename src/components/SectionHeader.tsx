@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-const TOTAL_SECTIONS = 8;
+const TOTAL_SECTIONS = 6;
 
 export function SectionHeader({
   number,

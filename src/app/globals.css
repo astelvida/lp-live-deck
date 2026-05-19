@@ -24,6 +24,17 @@
   --color-watch: oklch(0.19 0.02 60 / 0.6);
   --color-early: oklch(0.19 0.02 60 / 0.35);
 
+  /* Dark surface tokens — applied locally inside Hero + Velocity wrappers */
+  --color-ink-deep: oklch(0.05 0 0);            /* #0a0a0a hero/velocity bg */
+  --color-ink-deep-soft: oklch(0.10 0 0);       /* #141414 inner panels */
+  --color-ink-deep-panel: oklch(0.13 0 0);      /* #1c1c1c surfaces */
+  --color-paper-on-deep: oklch(0.97 0.012 85);  /* #FAFAF7 text on dark */
+  --color-paper-on-deep-soft: oklch(0.65 0 0);  /* #888 muted text */
+  --color-paper-on-deep-mute: oklch(0.45 0 0);  /* #555 disabled text */
+  --color-rule-on-deep: oklch(0.16 0 0);        /* #1a1a1a hairlines */
+  --color-live-green: oklch(0.72 0.18 142);     /* #4CAF50 live dot */
+  --color-amber: oklch(0.75 0.18 70);           /* #f59e0b warning */
+
   /* Easing + motion tokens */
   --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-precise: cubic-bezier(0.4, 0, 0.2, 1);
@@ -202,6 +213,205 @@
     will-change: transform;
   }
 
+  /* Dark surface wrapper — applied inside Hero + SignalVelocity sections.
+     Local-only: ::selection + scrollbar still inherit the page light theme. */
+  .surface-deep {
+    background: var(--color-ink-deep);
+    color: var(--color-paper-on-deep);
+  }
+  .surface-deep ::selection {
+    background: var(--color-paper-on-deep);
+    color: var(--color-ink-deep);
+  }
+
+  /* Editorial display — Fraunces hero treatment. Apply to large headlines. */
+  .display-hero {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 144, "SOFT" 60, "WONK" 0;
+    font-style: italic;
+    letter-spacing: -0.045em;
+    line-height: 0.92;
+  }
+
+  /* WONK on — used sparingly on accent words to mark them as editorialized */
+  .display-wonk {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 144, "SOFT" 80, "WONK" 1;
+    font-style: italic;
+    letter-spacing: -0.03em;
+  }
+
+  /* Pull-quote — the editorial centerpiece. Hangs out of the column. */
+  .pullquote {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 144, "SOFT" 40, "WONK" 0;
+    font-style: italic;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .pullquote::before {
+    content: "“";
+    margin-right: 0.08em;
+    font-family: var(--font-display);
+    font-feature-settings: "ss01" 0;
+    color: var(--color-signal);
+  }
+  .pullquote::after {
+    content: "”";
+    margin-left: 0.08em;
+    font-family: var(--font-display);
+    color: var(--color-signal);
+  }
+
+  /* Brutalist oversized backdrop numeral — sits behind a thesis card */
+  .backdrop-numeral {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+    font-style: italic;
+    line-height: 0.78;
+    letter-spacing: -0.06em;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Editorial-brutalist kicker — mono caps with red dot leader */
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--color-signal);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+  }
+  .kicker::before {
+    content: "";
+    display: inline-block;
+    width: 0.42em;
+    height: 0.42em;
+    background: var(--color-signal);
+    border-radius: 999px;
+  }
+
+  /* Hover-line — animated underline used on table rows / chips */
+  .hover-line {
+    position: relative;
+  }
+  .hover-line::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    height: 1px;
+    width: 0;
+    background: var(--color-signal);
+    transition: width 320ms var(--ease-editorial);
+  }
+  .hover-line:hover::after,
+  .hover-line:focus-visible::after {
+    width: 100%;
+  }
+
+  /* Editorial spine — rotated label on the side of a section spread.
+     Bigger and more present than the existing .spine-label utility. */
+  .spine {
+    position: sticky;
+    top: 40%;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+    align-self: flex-start;
+  }
+
+  /* Ticker / news-marquee bar treatment — used in Hero and Velocity */
+  .ticker-rule {
+    background-image: linear-gradient(
+      to right,
+      var(--color-rule-on-deep) 50%,
+      transparent 50%
+    );
+    background-size: 16px 1px;
+    background-repeat: repeat-x;
+    background-position: 0 50%;
+  }
+
+  /* Magnetic-style hover — used on company chips. Lifts + reddens. */
+  .magnetic {
+    transition:
+      transform 280ms var(--ease-editorial),
+      box-shadow 280ms var(--ease-editorial),
+      border-color 280ms var(--ease-editorial),
+      background-color 280ms var(--ease-editorial);
+    will-change: transform;
+  }
+  .magnetic:hover,
+  .magnetic:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px -10px oklch(0.05 0 0 / 0.18);
+  }
+
+  /* Bar fill draw-in keyframe — used by funnel/discovery bars */
+  @keyframes bar-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  .bar-fill {
+    transform-origin: left center;
+    animation: bar-fill 900ms var(--ease-editorial) forwards;
+    will-change: transform;
+  }
+  .bar-fill-1 {
+    animation-delay: 60ms;
+  }
+  .bar-fill-2 {
+    animation-delay: 160ms;
+  }
+  .bar-fill-3 {
+    animation-delay: 260ms;
+  }
+  .bar-fill-4 {
+    animation-delay: 360ms;
+  }
+  .bar-fill-5 {
+    animation-delay: 460ms;
+  }
+
+  /* Vertical SSI bar fill — bottom-anchored. Pairs with histogram. */
+  @keyframes bar-fill-v {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+  .bar-fill-v {
+    transform-origin: bottom center;
+    animation: bar-fill-v 1100ms var(--ease-editorial) forwards;
+    will-change: transform;
+  }
+
+  /* Pill chip used in Hero + Thesis cards for regulatory tags */
+  .reg-pill {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    letter-spacing: 0.02em;
+    border-radius: 3px;
+    padding: 2px 6px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
   /* Underline reveal for editorial links */
   .link-editorial {
     position: relative;
@@ -222,6 +432,8 @@
     .live-sweep,
     .scroll-hint,
     .hero-rise,
+    .bar-fill,
+    .bar-fill-v,
     *,
     *::before,
     *::after {
@@ -230,5 +442,7 @@
     }
     .hero-rise { opacity: 1; transform: none; }
     .live-sweep { transform: scaleX(1); }
+    .bar-fill { transform: scaleX(1); }
+    .bar-fill-v { transform: scaleY(1); }
   }
 }

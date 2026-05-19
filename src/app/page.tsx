@@ -1,56 +1,48 @@
 import {
-  getFunnel,
-  getHeroStats,
-  getInfraCounts,
+  getEvidenceData,
+  getHeroData,
   getLatestPosts,
   getPipeline,
-  getScouting,
   getSignalVelocity,
   getTheses,
-  getTopByScore,
 } from "@/lib/notion";
 import { LiveStatusBar } from "@/components/LiveStatusBar";
+import { ScrollProgress } from "@/components/ScrollProgress";
 import { Hero } from "@/sections/Hero";
 import { ThesisSection } from "@/sections/Thesis";
 import { PipelineSection } from "@/sections/Pipeline";
-import { FunnelSection } from "@/sections/Funnel";
 import { SignalVelocitySection } from "@/sections/SignalVelocity";
-import { TrackRecordSection } from "@/sections/TrackRecord";
-import { InfrastructureSection } from "@/sections/Infrastructure";
+import { EvidenceSection } from "@/sections/Evidence";
 import { WritingSection } from "@/sections/Writing";
 
 export const revalidate = 60;
 
 export default async function Page() {
-  const [hero, theses, pipeline, funnel, velocity, top, posts, infra, scouting] =
-    await Promise.all([
-      getHeroStats(),
-      getTheses(),
+  const [hero, pipeline, theses, velocity, evidence, posts] = await Promise.all(
+    [
+      getHeroData(),
       getPipeline(),
-      getFunnel(),
+      getTheses(),
       getSignalVelocity(),
-      getTopByScore(),
+      getEvidenceData(),
       getLatestPosts(),
-      getInfraCounts(),
-      getScouting(),
-    ]);
+    ],
+  );
 
   return (
     <>
       <LiveStatusBar generatedAt={hero.generatedAt} />
+      <ScrollProgress />
       <main className="mx-auto w-full max-w-[1440px] px-6 sm:px-10">
-        <Hero stats={hero} />
-        <ThesisSection theses={theses} />
+        <Hero data={hero} />
         <PipelineSection data={pipeline} />
-        <FunnelSection data={funnel} />
+        <ThesisSection theses={theses} />
         <SignalVelocitySection data={velocity} />
-        <TrackRecordSection companies={top} />
-        <InfrastructureSection counts={infra} scouting={scouting} />
+        <EvidenceSection data={evidence} />
         <WritingSection featured={posts.featured} recent={posts.recent} />
       </main>
       <footer className="border-t border-[var(--color-ink)] pt-12 pb-16">
         <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-10">
-          {/* Colophon heading */}
           <div className="grid-deck">
             <div className="col-span-12 md:col-span-2">
               <p
@@ -76,7 +68,6 @@ export default async function Page() {
             </div>
           </div>
 
-          {/* Colophon details grid */}
           <dl
             className="mt-10 grid gap-8 border-t border-[var(--color-rule)] pt-8 sm:grid-cols-2 md:grid-cols-4"
             style={{ fontFamily: "var(--font-mono)" }}
@@ -94,7 +85,7 @@ export default async function Page() {
                 Source of truth
               </dt>
               <dd className="mt-2 text-xs leading-relaxed text-[var(--color-ink-soft)]">
-                Four Notion DBs · Dealflow · Signals · Thesis Pack · Writing.
+                Four Notion sources · Companies · Signals · Thesis Pack · Writing.
               </dd>
             </div>
             <div>
@@ -119,7 +110,6 @@ export default async function Page() {
             </div>
           </dl>
 
-          {/* Signature row */}
           <div className="mt-10 flex flex-col items-baseline justify-between gap-4 border-t border-[var(--color-rule)] pt-6 md:flex-row">
             <p
               className="text-[10px] uppercase tracking-[0.28em] text-[var(--color-ink-mute)]"
@@ -132,7 +122,7 @@ export default async function Page() {
               style={{ fontFamily: "var(--font-mono)" }}
             >
               <span className="text-[var(--color-signal)]">END</span> ·{" "}
-              <span className="tabular-nums">08 / 08</span>
+              <span className="tabular-nums">06 / 06</span>
             </p>
           </div>
         </div>
