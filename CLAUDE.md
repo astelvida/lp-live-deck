@@ -11,7 +11,7 @@ npm install
 npm run dev          # Next dev @ http://localhost:3000
 npm run build        # Production build
 npm run type-check   # tsc --noEmit — run before every commit
-npm run lint         # eslint-config-next
+npm run lint         # eslint . — ESLint 9 flat config
 ```
 
 Deploy: `git push origin main` auto-deploys to production via the GitHub integration wired
@@ -198,6 +198,14 @@ The 05 section is a Harmonic/PitchBook-shaped dense data table living at
   edit (PostToolUse) and blocks writes to `.env.local` with exit 2 (PreToolUse). Don't re-run
   type-check manually after edits; edit `.env.example` instead of `.env.local` when changing
   env shape.
+- **ESLint is a native flat config.** `eslint.config.mjs` imports `@next/eslint-plugin-next`'s
+  `flatConfig.coreWebVitals` directly — NOT the `eslint-config-next` shareable config. The
+  shareable config routes through `@rushstack/eslint-patch`, which fails to patch ESLint 9.39+
+  on Node 24 (`Failed to patch ESLint because the calling module was not recognized`) and
+  silently kills linting in both `eslint` and the `next build` lint step. Don't reintroduce
+  `extends("next/core-web-vitals")` / `FlatCompat`. The plugin + `@typescript-eslint/parser` +
+  `@eslint/js` resolve at the repo root via pnpm's default `public-hoist-pattern` (`*eslint*`).
+  `next lint` is deprecated (removed in Next 16); the `lint` script is plain `eslint .`.
 - **Vercel CLI 50.x `env add` quirks.** `vercel env add <name> <env>` takes **one** environment
   per call (not multi-env). Preview scope needs a git-branch positional — stdin pipe alone
   triggers an unsatisfiable interactive prompt. `--sensitive` + `development` scope also
