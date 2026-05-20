@@ -60,7 +60,7 @@ export function EvidenceSection({ data }: { data: EvidenceData }) {
           ~4000px tall and Motion's useInView({ amount: 0.3 }) ratio can never
           be reached on a 900px viewport, leaving the wrapper stuck at opacity 0.
           The header above already animates; the table renders directly. */}
-      <div className="mt-14 border-y border-[var(--color-ink)]">
+      <div className="mt-14 border-2 border-[var(--color-ink)]">
         <EvidenceTable companies={data.companies} />
       </div>
     </section>

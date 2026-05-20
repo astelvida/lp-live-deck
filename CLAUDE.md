@@ -126,6 +126,20 @@ The 05 section is a Harmonic/PitchBook-shaped dense data table living at
   `presets: PresetId[] | "all"` controlling visibility. **Adding a column** means three edits in
   lockstep: (1) extend `ColumnKey` here, (2) add a `case` to the `Cell` switch in `EvidenceRow.tsx`,
   (3) add a `case` to `sortValue()` in `EvidenceTable.tsx` if sortable.
+- **Brutalist shell** — the table sits in a `border-2` ink frame with a solid black `<thead>`
+  band (`bg-[var(--color-ink)]`, light text); `SortableTh` + the plain `<th>` paint their sticky
+  backgrounds ink to match. Each row carries a 2-digit mono folio (`01`…`NN`) and the Adj.SSI bar
+  is rescaled from a 35 floor (`SSI_FLOOR` in `EvidenceRow.tsx`) so clustered 65–90 scores show
+  real spread; bar colour tracks the priority tier.
+- **`ConvictionDistribution`** — a Recharts `BarChart` strip between the filter bar and the table,
+  fed by the *visible* (filtered + sorted) rows. Six adjusted-SSI buckets (35→95+); re-animates on
+  every filter / preset change. This is the deck's only per-row-context chart in Evidence.
+- **`recentSignals` is always empty** — `getEvidenceData` maps signals to companies by the
+  `company` rich-text field on the Signals DB, but that field is unpopulated on every signal
+  (the real link is a Notion relation, unresolved — see the comment near line 1129 of `notion.ts`).
+  So `EvidenceCompany.recentSignals` is `[]` for all rows today. Don't build per-company signal
+  UI on it (a velocity sparkline was tried and dropped for this reason); resolve the relation in
+  `getEvidenceData` first if per-company signals are needed.
 - **Presets** — Sourcing (default · discovery, raising, idle), IC Prep (falsifier, anti-thesis,
   memo, funding), Founders (team highlights, customer type), Catalyst (countdown, traction Δ).
   Selected via the `ViewPresetSwitcher` segmented control. State in `useState`; no URL params,

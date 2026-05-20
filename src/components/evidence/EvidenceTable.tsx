@@ -5,6 +5,7 @@ import type {
   EvidenceCompany,
   RaisingLikelihood,
 } from "@/lib/types";
+import { ConvictionDistribution } from "@/components/evidence/ConvictionDistribution";
 import { EvidenceRow } from "@/components/evidence/EvidenceRow";
 import {
   FilterBar,
@@ -251,6 +252,8 @@ export function EvidenceTable({
         setPreset={setPreset}
       />
 
+      <ConvictionDistribution companies={sorted} />
+
       <div className="overflow-x-auto">
         <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
           <colgroup>
@@ -259,7 +262,7 @@ export function EvidenceTable({
             ))}
           </colgroup>
           <thead>
-            <tr>
+            <tr className="bg-[var(--color-ink)]">
               {columns.map((col) =>
                 col.sortable ? (
                   <SortableTh
@@ -289,12 +292,12 @@ export function EvidenceTable({
                         ? {
                             position: "sticky",
                             left: col.stickyLeft,
-                            background: "var(--color-paper)",
+                            background: "var(--color-ink)",
                             zIndex: 3,
                           }
                         : {}),
                     }}
-                    className="border-b-[0.5px] border-[var(--color-rule)] px-3 py-2.5 text-[9px] uppercase tracking-[0.18em] text-[var(--color-ink-mute)]"
+                    className="px-3 py-3 text-[10px] uppercase tracking-[0.16em] text-[oklch(0.97_0.012_85_/_0.55)]"
                   >
                     <span style={{ fontFamily: "var(--font-mono)" }}>
                       {col.label}
@@ -310,6 +313,7 @@ export function EvidenceTable({
                 key={c.id}
                 company={c}
                 columns={columns}
+                rowIndex={idx}
                 isExpanded={expanded.has(c.id)}
                 onToggle={onToggleExpand}
                 highlightP0First={idx === 0 && sortField === "adjSsi"}
@@ -319,7 +323,7 @@ export function EvidenceTable({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="border-t-[0.5px] border-[var(--color-rule)] px-3 py-3 text-center text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-mute)]"
+                  className="border-t-2 border-[var(--color-ink)] bg-[var(--color-paper-deep)] px-3 py-3 text-center text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-mute)]"
                   style={{ fontFamily: "var(--font-mono)" }}
                 >
                   + {hiddenCount} hidden — adjust filters to show

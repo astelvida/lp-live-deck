@@ -10,14 +10,14 @@ import { FounderHighlightChip } from "@/components/evidence/FounderHighlightChip
 import { IdleBadge } from "@/components/evidence/IdleBadge";
 import { RaisingLikelihoodPill } from "@/components/evidence/RaisingLikelihoodPill";
 import { TrendArrow } from "@/components/evidence/TrendArrow";
-import {
-  firstLine,
-  formatFundingCompact,
-} from "@/components/evidence/utils";
+import { firstLine, formatFundingCompact } from "@/components/evidence/utils";
 import type { Column } from "@/components/evidence/columnModel";
 
-// Color tokens reused from the previous table — kept as inline maps so a
-// designer reading this file sees the full vocabulary at once.
+// SSI scores in the live buffer cluster in the 35–95 band. A 0–100 bar makes
+// every row look ~80% full; rescaling from a 35 floor gives the column real
+// visible spread, so the bar communicates rank instead of just rendering red.
+const SSI_FLOOR = 35;
+
 const THESIS_BADGE_CLS: Record<string, string> = {
   "Governed Agentic Ops":
     "bg-[oklch(0.95_0.03_240)] text-[oklch(0.32_0.13_240)] border-[0.5px] border-[oklch(0.84_0.08_240)]",
@@ -31,11 +31,19 @@ const THESIS_BADGE_LABEL: Record<string, string> = {
   Both: "Both",
 };
 
+// Tier drives the SSI bar colour — P0 red, P1 clay, lower tiers recede to ink.
+const SSI_BAR_COLOR: Record<string, string> = {
+  P0: "var(--color-signal)",
+  P1: "var(--color-clay)",
+  P2: "var(--color-ink-soft)",
+  P3: "var(--color-ink-mute)",
+};
+
 const PRIORITY_BADGE: Record<string, string> = {
-  P0: "bg-[var(--color-signal-soft)] text-[var(--color-signal)] border-[0.5px] border-[var(--color-signal)]",
-  P1: "bg-[oklch(0.97_0.05_70)] text-[oklch(0.45_0.13_70)] border-[0.5px] border-[var(--color-amber)]",
-  P2: "bg-[var(--color-paper)] text-[var(--color-ink-mute)] border-[0.5px] border-[var(--color-rule)]",
-  P3: "bg-[var(--color-paper)] text-[var(--color-ink-mute)] border-[0.5px] border-[var(--color-rule)]",
+  P0: "bg-[var(--color-signal)] text-white",
+  P1: "bg-[var(--color-clay)] text-white",
+  P2: "bg-transparent text-[var(--color-ink-soft)] border-[0.5px] border-[var(--color-rule)]",
+  P3: "bg-transparent text-[var(--color-ink-mute)] border-[0.5px] border-[var(--color-rule)]",
 };
 
 const MEMO_BADGE: Record<string, string> = {
@@ -62,7 +70,7 @@ const ANTI_THESIS_BADGE: Record<string, string> = {
 function MutedDash() {
   return (
     <span
-      className="text-[10px] text-[var(--color-ink-mute)]"
+      className="text-[10px] text-[var(--color-ink-faint)]"
       style={{ fontFamily: "var(--font-mono)" }}
     >
       —
@@ -73,41 +81,49 @@ function MutedDash() {
 function Cell({
   col,
   company,
+  rowIndex,
   isP0,
   isSelected,
 }: {
   col: Column;
   company: EvidenceCompany;
+  rowIndex: number;
   isP0: boolean;
   isSelected: boolean;
 }) {
-  // One cell renderer per column key. Keeps row markup linear; column
-  // definitions stay pure-data. Sticky background is applied on the <td>
-  // itself (below) so we don't have to thread it into every cell here.
   switch (col.key) {
     case "company": {
-      // Includes the red left-border slide as a P0/selected/hover indicator.
       const accentCls = isSelected
         ? "bg-[var(--color-signal)]"
         : isP0
           ? "bg-[var(--color-signal)] opacity-100"
-          : "bg-[var(--color-signal)] opacity-0 group-hover:opacity-100";
+          : "bg-[var(--color-ink)] opacity-0 group-hover:opacity-100";
       return (
         <>
           <span
             aria-hidden="true"
-            className={`absolute inset-y-0 left-0 w-[3px] transition-opacity duration-200 ${accentCls}`}
+            className={`absolute inset-y-0 left-0 w-[4px] transition-opacity duration-200 ${accentCls}`}
           />
-          <span
-            className={`ml-2 truncate text-[12px] ${
-              isP0 || isSelected ? "font-medium" : ""
-            } ${
-              isSelected
-                ? "text-[var(--color-signal)]"
-                : "text-[var(--color-ink)]"
-            }`}
-          >
-            {company.name}
+          <span className="ml-3 flex items-baseline gap-2">
+            <span
+              className="shrink-0 text-[9px] tabular-nums tracking-[0.14em] text-[var(--color-ink-faint)]"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              {String(rowIndex + 1).padStart(2, "0")}
+            </span>
+            <span
+              className={`truncate text-[12.5px] ${
+                isP0 || isSelected
+                  ? "font-semibold"
+                  : "font-medium"
+              } ${
+                isSelected
+                  ? "text-[var(--color-signal)]"
+                  : "text-[var(--color-ink)]"
+              }`}
+            >
+              {company.name}
+            </span>
           </span>
         </>
       );
@@ -119,7 +135,7 @@ function Cell({
       if (!cls || !label) return <MutedDash />;
       return (
         <span
-          className={`inline-block rounded px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${cls}`}
+          className={`inline-block rounded-[2px] px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${cls}`}
           style={{ fontFamily: "var(--font-mono)" }}
         >
           {label}
@@ -128,19 +144,23 @@ function Cell({
     }
     case "adjSsi": {
       const value = company.adjustedSsi ?? company.ssiScore ?? 0;
+      const pct = Math.max(
+        4,
+        Math.min(100, ((value - SSI_FLOOR) / (100 - SSI_FLOOR)) * 100),
+      );
+      const barColor = company.priority
+        ? (SSI_BAR_COLOR[company.priority] ?? "var(--color-ink-mute)")
+        : "var(--color-ink-mute)";
       return (
-        <div className="flex items-center gap-2">
-          <div className="relative h-[5px] flex-1 overflow-hidden bg-[var(--color-paper-deep)]">
+        <div className="flex items-center gap-2.5">
+          <div className="relative h-[7px] flex-1 overflow-hidden rounded-[1px] bg-[var(--color-paper-deep)]">
             <span
               className="absolute inset-y-0 left-0 block"
-              style={{
-                width: `${Math.min(100, value)}%`,
-                background: "var(--color-signal)",
-              }}
+              style={{ width: `${pct}%`, background: barColor }}
             />
           </div>
           <span
-            className={`min-w-[36px] text-right text-[11px] tabular-nums ${
+            className={`min-w-[34px] text-right text-[13px] font-semibold tabular-nums ${
               isP0 ? "text-[var(--color-signal)]" : "text-[var(--color-ink)]"
             }`}
             style={{ fontFamily: "var(--font-mono)" }}
@@ -154,7 +174,7 @@ function Cell({
       if (!company.priority) return <MutedDash />;
       return (
         <span
-          className={`inline-block rounded px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${PRIORITY_BADGE[company.priority]}`}
+          className={`inline-block rounded-[2px] px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.08em] ${PRIORITY_BADGE[company.priority]}`}
           style={{ fontFamily: "var(--font-mono)" }}
         >
           {company.priority}
@@ -164,7 +184,7 @@ function Cell({
     case "sector":
       return company.sector ? (
         <span
-          className="truncate text-[11px] text-[var(--color-ink-soft)]"
+          className="truncate text-[11px] text-[var(--color-ink)]"
           style={{ fontFamily: "var(--font-sans)" }}
         >
           {company.sector}
@@ -197,9 +217,7 @@ function Cell({
     case "raisingLikelihood":
       return <RaisingLikelihoodPill value={company.raisingLikelihood} />;
     case "idleDays":
-      return (
-        <IdleBadge days={company.idleDays} priority={company.priority} />
-      );
+      return <IdleBadge days={company.idleDays} priority={company.priority} />;
     case "discoverySource":
       return company.discoverySource ? (
         <span
@@ -224,7 +242,7 @@ function Cell({
       const v = company.falsifierCheck ?? "Not Run";
       return (
         <span
-          className={`inline-block rounded px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${FALSIFIER_BADGE[v]}`}
+          className={`inline-block rounded-[2px] px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${FALSIFIER_BADGE[v]}`}
           style={{ fontFamily: "var(--font-mono)" }}
         >
           {v}
@@ -235,7 +253,7 @@ function Cell({
       const v = company.antiThesisFilter ?? "Not Run";
       return (
         <span
-          className={`inline-block rounded px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${ANTI_THESIS_BADGE[v]}`}
+          className={`inline-block rounded-[2px] px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${ANTI_THESIS_BADGE[v]}`}
           style={{ fontFamily: "var(--font-mono)" }}
         >
           {v}
@@ -246,7 +264,7 @@ function Cell({
       const v = company.icMemoStatus ?? "Not Started";
       return (
         <span
-          className={`inline-block rounded px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${MEMO_BADGE[v]}`}
+          className={`inline-block rounded-[2px] px-1.5 py-0.5 text-[9px] tracking-[0.08em] ${MEMO_BADGE[v]}`}
           style={{ fontFamily: "var(--font-mono)" }}
         >
           {v}
@@ -291,7 +309,7 @@ function Cell({
     case "customerType":
       return company.customerType ? (
         <span
-          className="inline-block rounded border-[0.5px] border-[var(--color-rule)] bg-white px-1.5 py-0.5 text-[9px] tracking-[0.08em] text-[var(--color-ink-soft)]"
+          className="inline-block rounded-[2px] border-[0.5px] border-[var(--color-rule)] bg-white px-1.5 py-0.5 text-[9px] tracking-[0.08em] text-[var(--color-ink-soft)]"
           style={{ fontFamily: "var(--font-mono)" }}
         >
           {company.customerType}
@@ -317,8 +335,6 @@ function Cell({
         </span>
       );
     case "expand":
-      // The expand chevron itself is rendered by EvidenceRow on the <button>
-      // wrapping the cell — keep the cell empty so the chevron sits flush.
       return null;
     default:
       return <MutedDash />;
@@ -328,12 +344,14 @@ function Cell({
 export function EvidenceRow({
   company,
   columns,
+  rowIndex,
   isExpanded,
   onToggle,
   highlightP0First,
 }: {
   company: EvidenceCompany;
   columns: readonly Column[];
+  rowIndex: number;
   isExpanded: boolean;
   onToggle: (id: string) => void;
   highlightP0First: boolean;
@@ -346,9 +364,21 @@ export function EvidenceRow({
       ? "bg-[oklch(0.98_0.025_27)]"
       : "hover:bg-[var(--color-paper)]";
   const colSpan = columns.length;
+
+  // Mount stagger — plays once on first render and again when a filtered-out
+  // row re-enters. Delay is capped so deep rows don't lag the whole reveal.
+  const staggerDelay = Math.min(rowIndex, 24) * 0.02;
+
   return (
     <>
-      <tr
+      <motion.tr
+        initial={reduced ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          delay: staggerDelay,
+          duration: 0.34,
+          ease: [0.22, 1, 0.36, 1],
+        }}
         className={`group cursor-pointer border-t-[0.5px] border-[var(--color-rule)] transition-colors ${rowBgCls}`}
         onClick={() => onToggle(company.id)}
         aria-expanded={isExpanded}
@@ -375,21 +405,19 @@ export function EvidenceRow({
               <td
                 key={col.key}
                 style={stickyStyle}
-                className="px-2 py-2 text-right"
+                className="px-2 py-2.5 text-right"
               >
                 <button
                   type="button"
-                  aria-label={
-                    isExpanded ? "Collapse row" : "Expand row"
-                  }
+                  aria-label={isExpanded ? "Collapse row" : "Expand row"}
                   onClick={(e) => {
                     e.stopPropagation();
                     onToggle(company.id);
                   }}
-                  className={`inline-flex size-5 items-center justify-center rounded text-[12px] transition-transform ${
+                  className={`inline-flex size-6 items-center justify-center rounded-[2px] border-[0.5px] text-[11px] transition-all ${
                     isExpanded
-                      ? "rotate-90 text-[var(--color-signal)]"
-                      : "text-[var(--color-ink-mute)] group-hover:text-[var(--color-ink)]"
+                      ? "rotate-90 border-[var(--color-signal)] bg-[var(--color-signal)] text-white"
+                      : "border-[var(--color-rule)] text-[var(--color-ink-mute)] group-hover:border-[var(--color-ink)] group-hover:text-[var(--color-ink)]"
                   }`}
                   style={{ fontFamily: "var(--font-mono)" }}
                 >
@@ -402,18 +430,19 @@ export function EvidenceRow({
             <td
               key={col.key}
               style={stickyStyle}
-              className={`${col.key === "company" ? "relative" : ""} px-3 py-2`}
+              className={`${col.key === "company" ? "relative" : ""} px-3 py-2.5`}
             >
               <Cell
                 col={col}
                 company={company}
+                rowIndex={rowIndex}
                 isP0={isP0}
                 isSelected={isExpanded}
               />
             </td>
           );
         })}
-      </tr>
+      </motion.tr>
       <AnimatePresence initial={false}>
         {isExpanded ? (
           <motion.tr
@@ -428,7 +457,7 @@ export function EvidenceRow({
                 initial={reduced ? false : { height: 0 }}
                 animate={{ height: "auto" }}
                 exit={{ height: 0 }}
-                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
                 style={{ overflow: "hidden" }}
               >
                 <ExpandedRowPanel company={company} />

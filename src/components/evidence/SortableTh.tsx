@@ -4,9 +4,9 @@ import type { CSSProperties, ReactNode } from "react";
 
 export type SortDir = "asc" | "desc";
 
-// A sortable <th> with click-to-sort behavior. The whole header is a button
-// so keyboard users get focus + Enter to sort. `aria-sort` is set per spec.
-// The arrow indicator uses the same red as our other accents when active.
+// A sortable <th> for the brutalist black header band. The whole header is a
+// button so keyboard users get focus + Enter to sort; `aria-sort` is set per
+// spec. Active column burns signal-red against the black band.
 export function SortableTh<F extends string>({
   field,
   currentField,
@@ -36,7 +36,7 @@ export function SortableTh<F extends string>({
       ? {
           position: "sticky",
           left: sticky.left,
-          background: "var(--color-paper)",
+          background: "var(--color-ink)",
           zIndex: 3,
         }
       : {}),
@@ -49,18 +49,20 @@ export function SortableTh<F extends string>({
       aria-sort={
         active ? (currentDir === "asc" ? "ascending" : "descending") : "none"
       }
-      className="border-b-[0.5px] border-[var(--color-rule)] px-3 py-2.5 text-[9px] uppercase tracking-[0.18em] text-[var(--color-ink-mute)]"
+      className="px-3 py-3 text-[10px] uppercase tracking-[0.16em]"
     >
       <button
         type="button"
         onClick={() => onSort(field)}
-        className={`inline-flex w-full items-center gap-1 transition-colors hover:text-[var(--color-ink)] ${
-          active ? "text-[var(--color-signal)]" : ""
+        className={`inline-flex w-full items-center gap-1 transition-colors ${
+          active
+            ? "text-[var(--color-signal)]"
+            : "text-[oklch(0.97_0.012_85_/_0.55)] hover:text-white"
         } ${align === "right" ? "justify-end" : ""}`}
         style={{ fontFamily: "var(--font-mono)" }}
       >
         <span>{children}</span>
-        <span aria-hidden="true" className="text-[8px] opacity-60">
+        <span aria-hidden="true" className="text-[8px] opacity-70">
           {arrow}
         </span>
       </button>
