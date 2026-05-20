@@ -262,6 +262,9 @@ src/
 - **Before every commit** — update this CLAUDE.md if the session introduced anything future
   Claude should know (new gotcha, schema, tool, convention). The doc update lands in the same
   commit as the change it describes.
+- **Two docs, two audiences** — `README.md` is the public-facing intro (what the deck is, live
+  URL, stack, commands) and stays light; this `CLAUDE.md` is the contributor/architecture doc.
+  Don't duplicate architecture into the README; deep detail belongs here.
 - **Before every deploy** — see `.claude/rules/quality.md` checklist (Lighthouse ≥90 across Perf /
   A11y / Best Practices, responsive at 375/768/1440, error boundaries verified by killing
   `NOTION_TOKEN` locally).
